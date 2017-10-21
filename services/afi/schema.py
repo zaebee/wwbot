@@ -9,10 +9,11 @@ except ImportError:
 from uuid import uuid4
 from datetime import datetime
 from pytils.translit import slugify
+from services.mixins import ElasticsearchMixin
 from services.schema import BasePlaceSerializer, BaseEventSerializer
 
 
-class PlaceSerializer(BasePlaceSerializer):
+class PlaceSerializer(BasePlaceSerializer, ElasticsearchMixin):
     provider = 'afi'
 
     def get_place_id(self, obj):
@@ -63,7 +64,7 @@ class PlaceSerializer(BasePlaceSerializer):
         return obj.get('phone', None)
 
 
-class EventSerializer(BaseEventSerializer):
+class EventSerializer(BaseEventSerializer, ElasticsearchMixin):
     provider = 'afi'
     id_pattern = re.compile(r'([a-zA-Z]+)([\d]+)')
     place = PlaceSerializer(required=False, allow_null=True)
