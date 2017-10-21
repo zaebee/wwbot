@@ -22,6 +22,33 @@ AI_ACCESS_TOKEN = '490d6a1fb84141cda768a766ab1173a8'
 PEER_ID = -155406641
 
 
+def get_bits(n):
+    b = []
+    while n:
+        b = [n & 1] + b
+        n >>= 1
+    return b or [0]
+
+
+def get_flags(mask):
+    flags = [
+        'UNREAD',
+        'OUTBOX',
+        'REPLIED',
+        'IMPORTANT',
+        'CHAT',
+        'FRIENDS',
+        'SPAM',
+        'DELЕTЕD',
+        'FIXED',
+        'MEDIA',
+        'HIDDEN',
+    ]
+    bits = get_bits(mask)
+    result = map(lambda x, y: (x, y), flags[::-1][-len(bits):], bits)
+    return dict(result)
+
+
 class VKChat:
 
     def __init__(self, *args, **kwargs):
@@ -117,10 +144,10 @@ class VKChat:
             # `message_id` as first argument
             message_id = args[0]
             if code == 4:
-                # got new message
-                flags = args[1]
-                if flags != 3:  # +1 new message flag, +2 outbox flag
-                    print('message_id', message_id)
+                flags = get_flags(args[1])
+                # got NOT outbox messages
+                if not flags.get('OUTBOX', 0):
+                    print('INBOX message_id', message_id)
                     user_id, timestamp, _, message, attachments = args[2:]
         return user_id, message
 
