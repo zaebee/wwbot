@@ -9,7 +9,7 @@ except ImportError:
 from uuid import uuid4
 from datetime import datetime
 from pytils.translit import slugify
-from services.mixins import ElasticsearchMixin
+from services.elastic.mixins import ElasticsearchMixin
 from services.schema import BasePlaceSerializer, BaseEventSerializer
 
 

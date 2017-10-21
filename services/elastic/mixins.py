@@ -4,7 +4,7 @@ from uuid import uuid4
 from elasticsearch import Elasticsearch, TransportError
 
 from django.conf import settings
-from .exceptions import MissingObjectError
+from . exceptions import MissingObjectError
 
 
 class ElasticsearchMixin(object):
@@ -29,7 +29,7 @@ class ElasticsearchMixin(object):
 
     @classmethod
     def get_document(cls, obj):
-        ## TODO if Event `deleted=True` disallow for indexing
+        # TODO if Event `deleted=True` disallow for indexing
         raise NotImplementedError
 
     @classmethod
