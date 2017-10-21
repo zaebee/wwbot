@@ -135,14 +135,13 @@ class VKChat:
     def search_events(self, **kwargs):
         url = 'https://stage.whatwhere.world/api/search'
         if any(kwargs.values()):
-            geocode = geolocator.geocode(kwargs['geo-city'])
+            geocode = geolocator.geocode(kwargs.get('geo-city', ''))
             lat = geocode.raw.get('lat', None) if geocode else None
             lng = geocode.raw.get('lon', None) if geocode else None
             address = geocode.raw.get('display_name', None) if geocode else None
             date = kwargs.get('date', [])
             query = kwargs.get('genre', '')
             params = {
-                'address': address or 0,  # profile.get('address', None),
                 'start_date': date[0] if len(date) == 1 else None,
                 'end_date': date[1] if len(date) == 2 else None,
                 'query': query,
