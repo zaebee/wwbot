@@ -124,11 +124,6 @@ class VKChat:
                     text,
                     **kwargs
                 )
-        else:
-            yield from self.send_message(
-                user_id,
-                'Пусто(',
-            )
         return events
 
     @asyncio.coroutine
