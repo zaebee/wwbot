@@ -4,8 +4,6 @@ from datetime import datetime
 from django.utils import timezone
 from django.conf import settings
 
-from constance import config
-
 from elasticsearch_dsl.connections import connections
 
 from elasticsearch_dsl import (
@@ -13,9 +11,6 @@ from elasticsearch_dsl import (
     Long, Integer, String, GeoPoint, Float,
     InnerObjectWrapper, Completion, Keyword, Text
 )
-
-from hitcount.models import PushNotification
-from services import translator
 
 # configure default ES connection
 connections.configure(default=settings.ELASTICSEARCH_CONNECTION_PARAMS)
