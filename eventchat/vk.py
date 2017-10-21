@@ -116,7 +116,7 @@ class VKChat:
                     'attachment': attach_photo
                 }
 
-                text = '%s \n https://whatwhere.world%s' % (
+                text = '%s \n https://stage.whatwhere.world%s' % (
                     event['title'], event['absolute_url']
                 )
                 yield from self.send_message(
@@ -124,13 +124,33 @@ class VKChat:
                     text,
                     **kwargs
                 )
+        else:
+            yield from self.send_message(
+                user_id,
+                'Пусто(',
+            )
         return events
 
     @asyncio.coroutine
     def search_events(self, **kwargs):
-        url = 'https://whatwhere.world/api/search'
+        url = 'https://stage.whatwhere.world/api/search'
         if any(kwargs.values()):
-            kwargs['query'] = kwargs.get('genre', '')
+            geocode = geolocator.geocode(kwargs['geo-city'])
+            lat = geocode.raw.get('lat', None) if geocode else None
+            lng = geocode.raw.get('lon', None) if geocode else None
+            address = geocode.raw.get('display_name', None) if geocode else None
+            date = kwargs.get('date', [])
+            query = kwargs.get('genre', '')
+            params = {
+                'lat': lat or 0,  # profile.get('lat', None),
+                'lng': lng or 0,  # profile.get('lng', None),
+                'address': address or 0,  # profile.get('address', None),
+                'radius': 1000,  # profile.get('radius', 80000),
+                'start_date': date[0] if len(date) == 1 else None,
+                'end_date': date[1] if len(date) == 2 else None,
+                'query': query,
+
+            }
             response = requests.get(url, params=kwargs)
             data = response.json()
             return data
