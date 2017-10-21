@@ -121,6 +121,72 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+ELASTICSEARCH_CONNECTION_PARAMS = {
+    'hosts': 'localhost:9200',
+    'timeout': 60,
+}
+
+ELASTICSEARCH_TYPE_CLASSES = (
+    'services.elastic.models.Event',
+    'services.elastic.models.EventPlace',
+    'services.elastic.models.Collection',
+)
+
+ELASTICSEARCH_DEFAULT_INDEX_SETTINGS = {
+    'settings': {
+        'index': {
+            'number_of_replicas': 1
+        },
+        'analysis': {
+            'filter': {
+                'trigrams_filter': {
+                    'type': 'ngram',
+                    'min_gram': 3,
+                    'max_gram': 3
+                },
+                'ru_stemming': {
+                    'type': 'snowball',
+                    'language': 'Russian',
+                }
+            },
+            'analyzer': {
+                'trigrams': {
+                    'type': 'custom',
+                    'tokenizer': 'standard',
+                    'filter':   [
+                        'lowercase',
+                        'trigrams_filter'
+                    ]
+                },
+                'russian': {
+                    'type': 'custom',
+                    'tokenizer': 'standard',
+                    'filter': ['lowercase', 'stop', 'ru_stemming'],
+                },
+                'left': {
+                    'filter': [
+                        'standard',
+                        'lowercase',
+                        'stop'
+                    ],
+                    'type': 'custom',
+                    'tokenizer': 'left_tokenizer'
+                },
+                'no_filter': {
+                    'tokenizer': 'whitespace'
+                }
+            },
+            'tokenizer': {
+                'left_tokenizer': {
+                    'side': 'front',
+                    'max_gram': 12,
+                    'type': 'edgeNGram'
+                }
+            }
+        }
+    }
+}
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
