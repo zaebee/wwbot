@@ -138,7 +138,6 @@ class VKChat:
             geocode = geolocator.geocode(kwargs.get('geo-city', ''))
             lat = geocode.raw.get('lat', None) if geocode else None
             lng = geocode.raw.get('lon', None) if geocode else None
-            address = geocode.raw.get('display_name', None) if geocode else None
             date = kwargs.get('date', [])
             query = kwargs.get('genre', '')
             params = {
@@ -151,7 +150,7 @@ class VKChat:
                 params['lng'] = lng  # profile.get('lng', None),
                 params['radius'] = 1000  # profile.get('radius', 80000),
 
-            response = requests.get(url, params=kwargs)
+            response = requests.get(url, params=params)
             data = response.json()
             return data
 
