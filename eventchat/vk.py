@@ -142,15 +142,16 @@ class VKChat:
             date = kwargs.get('date', [])
             query = kwargs.get('genre', '')
             params = {
-                'lat': lat or 0,  # profile.get('lat', None),
-                'lng': lng or 0,  # profile.get('lng', None),
                 'address': address or 0,  # profile.get('address', None),
-                'radius': 1000,  # profile.get('radius', 80000),
                 'start_date': date[0] if len(date) == 1 else None,
                 'end_date': date[1] if len(date) == 2 else None,
                 'query': query,
-
             }
+            if lat and lng:
+                params['lat'] = lat  # profile.get('lat', None),
+                params['lng'] = lng  # profile.get('lng', None),
+                params['radius'] = 1000  # profile.get('radius', 80000),
+
             response = requests.get(url, params=kwargs)
             data = response.json()
             return data
