@@ -81,12 +81,12 @@ class VKChat:
         message = yield from self.send_message(user_id, message)
         events = yield from self.search_events(**params)
 
-        if events and events['count']:
-            for event in events['results'][:1]:
-                place = event.get('place', {})
-                if event.get('image', None):
+        if events and events.hits.total:
+            for event in events:
+                place = event.place
+                if event.image:
                     # TODO upload photo to vk server
-                    image = requests.get(event['image'], stream=True)
+                    image = requests.get(event.image, stream=True)
                     files = {'photo': ('photo.jpg', image.content)}
                     server = yield from self.vk(
                         'photos.getMessagesUploadServer',
@@ -113,13 +113,13 @@ class VKChat:
                         attach_photo = attach_photo % (image['owner_id'], image['id'])
 
                 kwargs = {
-                    'lat': str(place.get('lat', 0)),
-                    'lng': str(place.get('lon', 0)),
+                    'lat': str(place.lat),
+                    'lng': str(place.lon),
                     'attachment': attach_photo
                 }
 
-                text = '%s \n https://stage.whatwhere.world%s' % (
-                    event['title'], event['absolute_url']
+                text = '%s \n Даты:%s' % (
+                    event.title, event.schedules
                 )
                 yield from self.send_message(
                     user_id,
@@ -130,7 +130,6 @@ class VKChat:
 
     @asyncio.coroutine
     def search_events(self, **kwargs):
-        url = 'https://stage.whatwhere.world/api/search'
         if any(kwargs.values()):
             geocode = geolocator.geocode(kwargs.get('geo-city', ''))
             lat = geocode.raw.get('lat', None) if geocode else None
@@ -147,9 +146,8 @@ class VKChat:
                 params['lng'] = lng  # profile.get('lng', None),
                 params['radius'] = 1000  # profile.get('radius', 80000),
 
-            response = requests.get(url, params=params)
-            data = response.json()
-            return data
+            events = Event.search_events(**params)
+            return events
 
     @asyncio.coroutine
     def parse_message_updates(self, code, *args):
