@@ -17,6 +17,7 @@ from aiovk.longpoll import LongPoll
 logger = logging.getLogger(__name__)
 geolocator = Nominatim()
 
+# TODO remove hard coded tokens
 VK_ACCESS_TOKEN = '861765b84b9a76c19ddb6d9fbfca27e1d5fb20201ffb33f121cb35e0895f3ddbc87f4b692a71129ec5484'
 AI_ACCESS_TOKEN = '490d6a1fb84141cda768a766ab1173a8'
 PEER_ID = -155406641
@@ -55,6 +56,7 @@ class VKChat:
         self.loop = asyncio.get_event_loop()
         self.vk_token = kwargs.get('vk_token', VK_ACCESS_TOKEN)
         self.ai_token = kwargs.get('ai_token', AI_ACCESS_TOKEN)
+        self.peer_id = kwargs.get('peer_id', PEER_ID)
 
         self.session = aiovk.TokenSession(access_token=self.vk_token)
         self.vk = aiovk.API(self.session)
@@ -172,7 +174,7 @@ class VKChat:
             user_id=user_id,
             message=message,
             domain='whatwhere.world',
-            peer_id=PEER_ID,
+            peer_id=self.peer_id,
             **kwargs
         )
 
