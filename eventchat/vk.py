@@ -123,10 +123,11 @@ class VKChat:
                 start = 'Начало - %s' % start
                 end = dates.end_date.strftime('%d.%m.%Y %H:%M') if dates.end_date else 'Неизвестно'
                 end = 'Окончание - %s' % end
-                text = '%s \n %s \n %s \n %s' % (
-                    event.title,
+                place = 'Место - %s' % event.place.title
+                text = '%s \n %s \n %s \n %s \n %s' % (
+                    event.title, place,
                     start, end,
-                    event.description or ''
+                    event.description[:200] or ''
                 )
                 yield from self.send_message(
                     user_id,
