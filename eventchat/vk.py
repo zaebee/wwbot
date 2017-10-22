@@ -14,13 +14,10 @@ from geopy.geocoders import Nominatim
 from aiovk import TokenSession, API
 from aiovk.longpoll import LongPoll
 
+from services.elastic.models import Event
+
 logger = logging.getLogger(__name__)
 geolocator = Nominatim()
-
-# TODO remove hard coded tokens
-VK_ACCESS_TOKEN = '861765b84b9a76c19ddb6d9fbfca27e1d5fb20201ffb33f121cb35e0895f3ddbc87f4b692a71129ec5484'
-AI_ACCESS_TOKEN = '490d6a1fb84141cda768a766ab1173a8'
-PEER_ID = -155406641
 
 
 def get_bits(n):
@@ -54,9 +51,9 @@ class VKChat:
 
     def __init__(self, *args, **kwargs):
         self.loop = asyncio.get_event_loop()
-        self.vk_token = kwargs.get('vk_token', VK_ACCESS_TOKEN)
-        self.ai_token = kwargs.get('ai_token', AI_ACCESS_TOKEN)
-        self.peer_id = kwargs.get('peer_id', PEER_ID)
+        self.vk_token = kwargs.get('vk_token', 0)
+        self.ai_token = kwargs.get('ai_token', 0)
+        self.peer_id = kwargs.get('peer_id', 0)
 
         self.session = aiovk.TokenSession(access_token=self.vk_token)
         self.vk = aiovk.API(self.session)
@@ -78,11 +75,13 @@ class VKChat:
         message = result['fulfillment']['speech']
 
         # send `welcome` message
-        message = yield from self.send_message(user_id, message)
+        if message:
+            message = yield from self.send_message(user_id, message)
         events = yield from self.search_events(**params)
 
         if events and events.hits.total:
-            for event in events:
+            for event in events[:1]:
+                attach_photo = ''
                 place = event.place
                 if event.image:
                     # TODO upload photo to vk server
@@ -113,13 +112,21 @@ class VKChat:
                         attach_photo = attach_photo % (image['owner_id'], image['id'])
 
                 kwargs = {
-                    'lat': str(place.lat),
-                    'lng': str(place.lon),
                     'attachment': attach_photo
                 }
+                if place.lat and place.lng:
+                    kwargs['lat'] = str(place.lat)
+                    kwargs['long'] = str(place.lng)
 
-                text = '%s \n Даты:%s' % (
-                    event.title, event.schedules
+                dates = event.schedules[0] if event.schedules else {}
+                start = dates.start_date.strftime('%d.%m.%Y %H:%M') if dates.start_date else 'Неизвестно'
+                start = 'Начало - %s' % start
+                end = dates.end_date.strftime('%d.%m.%Y %H:%M') if dates.end_date else 'Неизвестно'
+                end = 'Окончание - %s' % end
+                text = '%s \n %s \n %s \n %s' % (
+                    event.title,
+                    start, end,
+                    event.description or ''
                 )
                 yield from self.send_message(
                     user_id,
@@ -136,10 +143,12 @@ class VKChat:
             lng = geocode.raw.get('lon', None) if geocode else None
             date = kwargs.get('date', [])
             query = kwargs.get('genre', '')
+            category = kwargs.get('category', '')
             params = {
                 'start_date': date[0] if len(date) == 1 else None,
                 'end_date': date[1] if len(date) == 2 else None,
-                'query': query,
+                'q': ' '.join([query, category]),
+                'category': category
             }
             if lat and lng:
                 params['lat'] = lat  # profile.get('lat', None),
