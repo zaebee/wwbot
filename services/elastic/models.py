@@ -7,6 +7,7 @@ from django.conf import settings
 from elasticsearch_dsl.connections import connections
 
 from elasticsearch_dsl import (
+    Q,
     DocType, Date, Nested, Boolean, Object,
     Long, Integer, String, GeoPoint, Float,
     InnerObjectWrapper, Completion, Keyword, Text
