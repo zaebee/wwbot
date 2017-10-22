@@ -140,7 +140,7 @@ class VKChat:
                 text = '%s \n %s \n %s \n %s \n %s' % (
                     event.title, place,
                     start, end,
-                    event.description or ''
+                    (event.description or '')[:100]
                 )
                 try:
                     yield from self.send_message(
@@ -149,7 +149,7 @@ class VKChat:
                         **kwargs
                     )
                 except:
-                    pass
+                    print('error %s' % kwargs)
         return events
 
     @asyncio.coroutine
@@ -211,10 +211,27 @@ class VKChat:
             for update in result.get('updates', []):
                 user_id, message = yield from self.parse_message_updates(*update)
                 if user_id and message:
+                    # user = yield from self.get_user_info(user_id)
+                    # print('user %s' % user)
                     answer = yield from self.get_answer(user_id, message)
                     print('answer: %s' % answer)
                     events = yield from self.send_answer(user_id, answer)
             print('result: %s' % result)
+
+    @asyncio.coroutine
+    def get_user_info(self, user_id, **kwargs):
+        return self.vk(
+            'groups.get',
+            user_id=user_id,
+            extended=1,
+            fields=str(
+                'city,country,place,description,wiki_page,'
+                'members_count,counters,start_date,finish_date,'
+                'can_post,can_see_all_posts,activity,status,'
+                'contacts,links,fixed_post,verified,'
+                'site,can_create_topic'),
+            **kwargs
+        )
 
     @asyncio.coroutine
     def observe_chat(self):
