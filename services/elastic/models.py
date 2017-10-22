@@ -204,7 +204,8 @@ class Event(DocType):
             self.date_added = datetime.now()
         return super(Event, self).save(**kwargs)
 
-    def search_events(self, limit=100, **kwargs):
+    @classmethod
+    def search_events(cls, limit=100, **kwargs):
         """
         Build ES query fillter by `kwargs` params.
         kwargs = {
@@ -218,7 +219,7 @@ class Event(DocType):
             ....
         }
         """
-        search = self.search()
+        search = cls.search()
         search = search.exclude('term', deleted=True)
 
         observable = kwargs.get('observable', False)
