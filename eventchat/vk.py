@@ -71,6 +71,7 @@ class VKChat:
     @asyncio.coroutine
     def send_answer(self, user_id, answer):
         result = answer['result']
+        action = result['action']
         params = result['parameters']
         message = result['fulfillment']['speech']
 
@@ -78,9 +79,11 @@ class VKChat:
         if message:
             message = yield from self.send_message(user_id, message)
         events = yield from self.search_events(**params)
+        size = 5 if 'where-is-party-more' in action else 1
+        offset = 1 if 'where-is-party-more' in action else 0
 
         if events and events.hits.total:
-            for event in events[:1]:
+            for event in events[offset:size]:
                 attach_photo = ''
                 place = event.place
                 if event.image:
@@ -127,7 +130,7 @@ class VKChat:
                 text = '%s \n %s \n %s \n %s \n %s' % (
                     event.title, place,
                     start, end,
-                    event.description[:200] or ''
+                    event.description or ''
                 )
                 yield from self.send_message(
                     user_id,
