@@ -71,16 +71,22 @@ class VKChat:
     @asyncio.coroutine
     def send_answer(self, user_id, answer):
         result = answer['result']
-        action = result['action']
         params = result['parameters']
         message = result['fulfillment']['speech']
+        action = result['action']
 
+        size = 5 if 'where-is-party-next' in action else 1
+        offset = 1 if 'where-is-party-next' in action else 0
+        if 'where-is-party-next' in action:
+            contexts = result['contexts']
+            if len(contexts):
+                params = contexts[0]['parameters']
+
+        print('params %s' % params)
         # send `welcome` message
         if message:
             message = yield from self.send_message(user_id, message)
         events = yield from self.search_events(**params)
-        size = 5 if 'where-is-party-more' in action else 1
-        offset = 1 if 'where-is-party-more' in action else 0
 
         if events and events.hits.total:
             for event in events[offset:size]:
@@ -94,19 +100,21 @@ class VKChat:
                         'photos.getMessagesUploadServer',
                         peer_id=user_id
                     )
-                    print(server)
                     image_response = requests.post(
                         server['upload_url'],
                         files=files
                     )
-                    image_response_json = image_response.json()
-                    response = yield from self.vk(
-                        'photos.saveMessagesPhoto',
-                        hash=image_response_json['hash'],
-                        photo=image_response_json['photo'],
-                        server=image_response_json['server'],
-                    )
-                    print(response)
+                    try:
+                        image_response_json = image_response.json()
+                        response = yield from self.vk(
+                            'photos.saveMessagesPhoto',
+                            hash=image_response_json['hash'],
+                            photo=image_response_json['photo'],
+                            server=image_response_json['server'],
+                        )
+                        print(response)
+                    except:
+                        response = None
                     ###
                     images = response
                     if images:
