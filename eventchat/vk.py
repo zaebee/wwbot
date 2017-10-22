@@ -90,9 +90,9 @@ class VKChat:
 
         if events and events.hits.total:
             for event in events[offset:size]:
-                attach_photo = ''
+                attach_photo = getattr(event, 'attach', '')
                 place = event.place
-                if event.image:
+                if event.image and not attach_photo:
                     # TODO upload photo to vk server
                     image = requests.get(event.image, stream=True)
                     files = {'photo': ('photo.jpg', image.content)}
@@ -121,6 +121,8 @@ class VKChat:
                         image = images[0]
                         attach_photo = 'photo%s_%s'
                         attach_photo = attach_photo % (image['owner_id'], image['id'])
+                        event.attach = attach_photo
+                        event.save()
 
                 kwargs = {
                     'attachment': attach_photo
@@ -140,11 +142,14 @@ class VKChat:
                     start, end,
                     event.description or ''
                 )
-                yield from self.send_message(
-                    user_id,
-                    text,
-                    **kwargs
-                )
+                try:
+                    yield from self.send_message(
+                        user_id,
+                        text,
+                        **kwargs
+                    )
+                except:
+                    pass
         return events
 
     @asyncio.coroutine
