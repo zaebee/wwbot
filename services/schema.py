@@ -6,13 +6,30 @@ from dateutil.parser import parse
 
 from rest_framework import serializers
 
+from services.elastic.mixins import ElasticsearchMixin
 
-class BasePlaceSerializer(serializers.Serializer):
+
+class BasePlaceSerializer(serializers.Serializer, ElasticsearchMixin):
     """
-    Field mapping to our app.model.EventPlace
+    Field mapping to our  ES EventPlace model
     Overrides in providers schema
     """
     provider = 'ww'
+    index = 'place-index'
+    doc_type = 'places'
+
+    @classmethod
+    def get_index_name(cls):
+        return cls.index
+
+    @classmethod
+    def get_type_name(cls):
+        return cls.doc_type
+
+    @classmethod
+    def get_document(cls, obj):
+        return obj
+
     place_id = serializers.SerializerMethodField()
     provider_id = serializers.SerializerMethodField()
     provider = serializers.SerializerMethodField()
@@ -44,11 +61,26 @@ class BasePlaceSerializer(serializers.Serializer):
         return obj.get('description', '')
 
 
-class BaseEventSerializer(serializers.Serializer):
+class BaseEventSerializer(serializers.Serializer, ElasticsearchMixin):
     """
     Field mapping to our app.model.Event
     Overrides in providers schema
     """
+    index = 'event-index'
+    doc_type = 'events'
+
+    @classmethod
+    def get_index_name(cls):
+        return cls.index
+
+    @classmethod
+    def get_type_name(cls):
+        return cls.doc_type
+
+    @classmethod
+    def get_document(cls, obj):
+        return obj
+
     id = serializers.SerializerMethodField()
     provider_id = serializers.SerializerMethodField()
     provider = serializers.SerializerMethodField()

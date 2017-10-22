@@ -7,30 +7,13 @@ except ImportError:
     from urlparse import urlparse
 
 from uuid import uuid4
-from datetime import datetime
 from pytils.translit import slugify
-from services.elastic.mixins import ElasticsearchMixin
 from services.schema import BasePlaceSerializer, BaseEventSerializer
 
 
-class PlaceSerializer(BasePlaceSerializer, ElasticsearchMixin):
+class PlaceSerializer(BasePlaceSerializer):
     provider = 'afi'
-    index = 'place-index'
-    doc_type = 'places'
-
     id_pattern = re.compile(r'([a-zA-Z]+)([\d]+)')
-
-    @classmethod
-    def get_index_name(cls):
-        return cls.index
-
-    @classmethod
-    def get_type_name(cls):
-        return cls.doc_type
-
-    @classmethod
-    def get_document(cls, obj):
-        return obj
 
     def get_place_id(self, obj):
         provider_id = obj.get('company-id', 0)
@@ -91,25 +74,11 @@ class PlaceSerializer(BasePlaceSerializer, ElasticsearchMixin):
             return [phone['number'] for phone in phones if 'number' in phone]
 
 
-class EventSerializer(BaseEventSerializer, ElasticsearchMixin):
+class EventSerializer(BaseEventSerializer):
     provider = 'afi'
-    index = 'event-index'
-    doc_type = 'events'
 
     id_pattern = re.compile(r'([a-zA-Z]+)([\d]+)')
     place = PlaceSerializer(required=False, allow_null=True)
-
-    @classmethod
-    def get_index_name(cls):
-        return cls.index
-
-    @classmethod
-    def get_type_name(cls):
-        return cls.doc_type
-
-    @classmethod
-    def get_document(cls, obj):
-        return obj
 
     def get_id(self, obj):
         provider_id = obj.get('creation-id', 0)
