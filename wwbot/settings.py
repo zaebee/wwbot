@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'social_django',
+    'vk_cities',
     'eventchat.apps.EventchatConfig',
 ]
 
@@ -49,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'wwbot.urls'
@@ -101,6 +104,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.email.EmailAuth',
+    'social_core.backends.vk.VKOAuth2',
+    'social_core.backends.facebook.FacebookOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_VK_OAUTH2_KEY = '5881490'
+SOCIAL_AUTH_VK_OAUTH2_SECRET = 'QbpiAEVSi1zI0FsScORq'
+SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['friends']
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/

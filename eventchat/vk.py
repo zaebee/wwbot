@@ -15,6 +15,7 @@ from aiovk import TokenSession, API
 from aiovk.longpoll import LongPoll
 
 from services.elastic.models import Event
+from social_django.models import UserSocialAuth
 
 logger = logging.getLogger(__name__)
 geolocator = Nominatim()
@@ -71,9 +72,9 @@ class VKChat:
     @asyncio.coroutine
     def send_answer(self, user_id, answer):
         result = answer['result']
+        action = result['action']
         params = result['parameters']
         message = result['fulfillment']['speech']
-        action = result['action']
 
         size = 5 if 'where-is-party-next' in action else 1
         offset = 1 if 'where-is-party-next' in action else 0
@@ -211,16 +212,25 @@ class VKChat:
             for update in result.get('updates', []):
                 user_id, message = yield from self.parse_message_updates(*update)
                 if user_id and message:
-                    # user = yield from self.get_user_info(user_id)
-                    # print('user %s' % user)
                     answer = yield from self.get_answer(user_id, message)
                     print('answer: %s' % answer)
                     events = yield from self.send_answer(user_id, answer)
             print('result: %s' % result)
 
     @asyncio.coroutine
-    def get_user_info(self, user_id, **kwargs):
-        return self.vk(
+    def get_user_token(self, user_id, **kwargs):
+        social = UserSocialAuth.objects.filter(uid=user_id)
+        if social.count():
+            social = social.first()
+            # TODO check if not expired
+            return social.extra_data['access_token']
+
+    @asyncio.coroutine
+    def get_user_groups(self, user_id, **kwargs):
+        token = yield from self.get_user_token(user_id)
+        if access_token:
+            self.session.access_token = token
+        response = yield from self.vk(
             'groups.get',
             user_id=user_id,
             extended=1,
@@ -232,6 +242,8 @@ class VKChat:
                 'site,can_create_topic'),
             **kwargs
         )
+        response = [(a['activity'], a['name']) for a in response['items']]
+        return response
 
     @asyncio.coroutine
     def observe_chat(self):
