@@ -204,6 +204,90 @@ class Event(DocType):
             self.date_added = datetime.now()
         return super(Event, self).save(**kwargs)
 
+    def search_events(self, limit=100, **kwargs):
+        """
+        Build ES query fillter by `kwargs` params.
+        kwargs = {
+            'q': 'query string',
+            'start_date': 'now'
+            'end_date': 'now+7d',
+            'radius': 0,
+            'lat': 0.0,
+            'lng': 0.0,
+            'actual': False,
+            ....
+        }
+        """
+        search = self.search()
+        search = search.exclude('term', deleted=True)
+
+        observable = kwargs.get('observable', False)
+        start_date = kwargs.get('start_date', None)
+        end_date = kwargs.get('end_date', None)
+
+        limit_from = kwargs.get('limit_from', 0)
+        limit_to = kwargs.get('limit_to', 18)
+
+        if not start_date:
+            search = search.query(
+                'range',
+                **{'schedules.end_date': {
+                    'lte': 'now+1y/d',
+                    'gte': 'now/d'
+                }}
+            )
+
+        if 'q' in kwargs and kwargs['q']:
+            search = search.query(
+                'multi_match',
+                query=kwargs['q'],
+                type='most_fields',
+                minimum_should_match='75%',
+                operator='and',
+                tie_breaker=0.8,
+                fields=['title^4', 'description',
+                        'place.city', 'place.title^2', 'place.address']
+            )
+
+        if start_date and end_date:
+            search = search.query(
+                'range',
+                **{'schedules.start_date': {
+                    'gte': '{start_date}||/d'.format(**kwargs),
+                    'lte': '{end_date}||/d'.format(**kwargs)
+                }}
+            )
+
+        elif start_date:
+            search = search.query(
+                'range',
+                **{'schedules.start_date': {
+                    'gte': '{start_date}||/d'.format(**kwargs),
+                    'lte': '{start_date}||/d'.format(**kwargs)
+                }}
+            )
+        elif end_date:
+            search = search.query(
+                'range',
+                **{'schedules.start_date': {
+                    'gte': '{end_date}||/d'.format(**kwargs),
+                    'lte': '{end_date}||/d'.format(**kwargs)
+                }}
+            )
+
+        if 'radius' in kwargs and 'lat' in kwargs and 'lng' in kwargs:
+            search = search.query('bool', filter=Q(
+                'geo_distance',
+                distance='{radius}m'.format(**kwargs),
+                **{'place.geometry': {
+                    'lat': kwargs['lat'], 'lon': kwargs['lng']
+                }}
+            ))
+
+        search = search.sort('schedules.start_date')
+        search = search[limit_from:limit_to]
+        return search if observable else search.execute()
+
 
 class Collection(DocType):
     title = Text(multi=True, fields={
