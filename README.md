@@ -1,6 +1,5 @@
 # wwbot
 
-==========
 Search events near you
 
 ## deploy
@@ -8,7 +7,10 @@ Search events near you
 * `pip install -r req.txt`
 
 ## example run
-* `dialog_token` is https://dialogflow.com api key
-* `vk_token` is https://vk.com app key
+`./manage.py runscript run_vk --script-args <peer_id> <vk_token> <dialog_token>`
 
-* `./manage.py runscript run_vk --script-args <peer_id> <vk_token> <dialog_token>`
+-----
+- `peer_id` is vk group
+- `vk_token` is https://vk.com app key
+- `dialog_token` is https://dialogflow.com api key
+
