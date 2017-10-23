@@ -120,8 +120,10 @@ class VKChat:
                     images = response
                     if images:
                         image = images[0]
-                        attach_photo = 'photo%s_%s'
-                        attach_photo = attach_photo % (image['owner_id'], image['id'])
+                        attach_photo = 'photo%s_%s' % (
+                            image['owner_id'],
+                            image['id']
+                        )
                         event.attach = attach_photo
                         event.save()
 
@@ -132,11 +134,15 @@ class VKChat:
                     kwargs['lat'] = str(place.lat)
                     kwargs['long'] = str(place.lng)
 
-                dates = event.schedules[0] if event.schedules else {}
-                start = dates.start_date.strftime('%d.%m.%Y %H:%M') if dates.start_date else 'Неизвестно'
-                start = 'Начало - %s' % start
-                end = dates.end_date.strftime('%d.%m.%Y %H:%M') if dates.end_date else 'Неизвестно'
-                end = 'Окончание - %s' % end
+                # TODO serialize dates/places message answer
+                dates = event.dates[0] if event.dates else {}
+                start = end = ''
+                if 'start_date' in dates:
+                    start = dates.start_date.strftime('%d.%m.%Y %H:%M')
+                    start = 'Начало - %s' % start
+                if 'end_date' in dates:
+                    end = dates.end_date.strftime('%d.%m.%Y %H:%M')
+                    end = 'Окончание - %s' % end
                 place = 'Место - %s' % event.place.title
                 text = '%s \n %s \n %s \n %s \n %s' % (
                     event.title, place,
