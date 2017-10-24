@@ -16,10 +16,13 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 
+from eventchat import views
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
 ]
 
 urlpatterns += [
     url('', include('social_django.urls', namespace='social')),
+    url(r'^slack/$', views.slack_chat, name="slack-callback"),
 ]
